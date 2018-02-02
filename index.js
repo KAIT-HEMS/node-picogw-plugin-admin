@@ -297,7 +297,7 @@ exports.onUIGetSettingsSchema = onUIGetSettingsSchema;
 async function onUISetSettings(newSettings) {
     const pi = pluginInterface;
     if (newSettings.server_port != -1) {
-        pi.publish('client_settings', {port: newSettings.server_port});
+        pi.server.publish('client_settings', {port: newSettings.server_port});
     }
 
     for (const clName of Object.keys(newSettings.api_filter)) {
