@@ -1,6 +1,6 @@
 {
   "name": "picogw-plugin-admin",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Admin plugin of picogw",
   "main": "index.js",
   "scripts": {
