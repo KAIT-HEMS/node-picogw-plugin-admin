@@ -107,15 +107,15 @@ function onProcCallGet(method, path, args) {
     const propname = pathSplit.join('/');
 
     if (serviceid == '') { // access 'admin/' => service list
-        let re = {net: {}, server_status: {}};
+        let re = {net: {}, server_status: {},_info{leaf:false}};
         re.net = ipv4.getMACs();
 
-        if (args.option === 'true') {
-            re.net.option = {
+        if (args.info === 'true') {
+            re.net._info = {
                 leaf: false,
                 doc: {short: 'Mac address of recognized network peers'},
             };
-            re.server_status.option={
+            re.server_status._info={
                 leaf: true,
                 doc: {short: 'Check server memory/swap status'},
             };
@@ -132,8 +132,8 @@ function onProcCallGet(method, path, args) {
             // log(JSON.stringify(macs));
             ret = macs;
             for (const [mac, macinfo] of Object.entries(macs)) {
-                if (args.option === 'true') {
-                    ret[mac].option = {
+                if (args.info === 'true') {
+                    ret[mac]._info = {
                         leaf: true,
                         doc: {short: (macinfo.ip || 'IP:null')},
                     };
