@@ -107,7 +107,7 @@ function onProcCallGet(method, path, args) {
     const propname = pathSplit.join('/');
 
     if (serviceid == '') { // access 'admin/' => service list
-        let re = {net: {}, server_status: {},_info{leaf:false}};
+        let re = {net: {}, server_status: {}, _info: {leaf: false}};
         re.net = ipv4.getMACs();
 
         if (args.info === 'true') {
