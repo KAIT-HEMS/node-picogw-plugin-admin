@@ -106,11 +106,16 @@ function onProcCallGet(method, path, args) {
     const serviceid = pathSplit.shift();
     const propname = pathSplit.join('/');
 
+    const bInfo = (args.info === 'true');
+
     if (serviceid == '') { // access 'admin/' => service list
-        let re = {net: {}, server_status: {}, _info: {leaf: false}};
+        let re = {net: {}, server_status: {}};
+        if (bInfo) {
+            re._info = {leaf: false};
+        }
         re.net = ipv4.getMACs();
 
-        if (args.info === 'true') {
+        if (bInfo) {
             re.net._info = {
                 leaf: false,
                 doc: {short: 'Mac address of recognized network peers'},
@@ -132,7 +137,7 @@ function onProcCallGet(method, path, args) {
             // log(JSON.stringify(macs));
             ret = macs;
             for (const [mac, macinfo] of Object.entries(macs)) {
-                if (args.info === 'true') {
+                if (bInfo) {
                     ret[mac]._info = {
                         leaf: true,
                         doc: {short: (macinfo.ip || 'IP:null')},
