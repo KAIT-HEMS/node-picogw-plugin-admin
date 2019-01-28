@@ -156,6 +156,7 @@ function convToNum(ipstr) {
 
 
 // eslint-disable-next-line require-jsdoc
+let prevMyMacAddress;
 function chkArpTable() {
     let oldmacs = macs;
 
@@ -195,6 +196,10 @@ function chkArpTable() {
                     self: true,
                     netmask: iinfo.netmask,
                 };
+		if( prevMyMacAddress != iinfo.address ){
+                    log(`The server is running at \u001b[31m${iinfo.address}\u001b[0m`);
+		    prevMyMacAddress = iinfo.address;
+		}
 
                 let mynet = _mynet;
 
