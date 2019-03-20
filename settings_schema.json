@@ -2,58 +2,99 @@
 	"title": "Admin Settings"
 	,"type": "object"
 	,"properties":{
-		"server_port":{
-			"title": "Port nubmer of web server"
-			,"type":"integer"
-			,"description" : "-1 keeps the current port"
-			,"default":-1
-		}
-		,"api_filter":{
-			"title":"API filter in regular expression"
+		"webapi":{
+			"title":"WebAPI"
 			,"type":"object"
-			,"properties":{}
-		}
-		,"interfaces":{
-			"title": "Network Interfaces (THIS WILL DESTROY YOUR CURRENT NETWORK CONNECTION!)"
-			,"type": "object"
-			,"oneOf": []
-		}
-		,"detail":{
-			"title": "Detailed network settings"
-			,"type": "object"
-			,"additionalProperties": false
-			,"oneOf":[
-				{
-					"title":"DHCP"
+			,"properties":{
+				"server_port":{
+					"title": "Port nubmer of web server"
+					,"type":"integer"
+					,"description" : "-1 keeps the current port"
+					,"default":-1
 				}
-				,{
-					"title":"Static"
+				,"api_filter":{
+					"title":"API filter in regular expression"
 					,"type":"object"
-					,"properties":{
-						"ip": {
-							"title": "IP/MASKLEN (eg. 192.168.1.10/24)"
-						    ,"type": "string"
-						}
-						,"default_gateway": {
-							"title": "Default gateway (if necessary. eg. 192.168.1.1)"
-						    ,"type": "string"
-						}
-
-					}
+					,"properties":{}
 				}
-			]
+			
+			}
 		}
-		,"server_power": {
-			"title": "Server power after network setting (PicoGW may not reboot if not configured as so)"
-			,"type": "string"
-			,"default":"none"
-			,"enum":["none","reboot","shutdown"]
+		, "mqtt":{
+			"title":"MQTT"
+			,"type":"object"
+			,"properties":{
+				"mqtt_enable":{
+					"title":"This plugin allows remote access of PicoGW through mqtt broker. This can increase security risk. Enable this feature only when you accept this risk at your own."
+					,"type":"boolean"
+					,"required": true
+					,"default": false
+				}
+				,"mqtt_broker_address":{
+					"title": "MQTT broker address"
+					,"type": "string"
+					,"required": true
+					,"default": "mqtt://test.mosquitto.org"
+				}
+				,"mqtt_qos":{
+					"title": "QoS: Quality of service"
+					,"type": "number"
+					,"default": 1
+					,"required": true
+					,"default": 1
+				}
+			}
 		}
-		,"root_passwd": {
-			"title": "Sudo password"
-			,"description": "Necessary to change network setup"
-			,"type": "string"
-			,"format":"password"
+
+
+		, "network":{
+			"title":"Network"
+			,"type":"object"
+			,"properties":{
+				"interfaces":{
+					"title": "Network Interfaces (THIS WILL DESTROY YOUR CURRENT NETWORK CONNECTION!)"
+					,"type": "object"
+					,"oneOf": []
+				}
+				,"detail":{
+					"title": "Detailed network settings"
+					,"type": "object"
+					,"additionalProperties": false
+					,"oneOf":[
+						{
+							"title":"DHCP"
+						}
+						,{
+							"title":"Static"
+							,"type":"object"
+							,"properties":{
+								"ip": {
+									"title": "IP/MASKLEN (eg. 192.168.1.10/24)"
+									,"type": "string"
+								}
+								,"default_gateway": {
+									"title": "Default gateway (if necessary. eg. 192.168.1.1)"
+									,"type": "string"
+								}
+
+							}
+						}
+					]
+				}
+				,"server_power": {
+					"title": "Server power after network setting (PicoGW may not reboot if not configured as so)"
+					,"type": "string"
+					,"default":"none"
+					,"enum":["none","reboot","shutdown"]
+				}
+				,"root_passwd": {
+					"title": "Sudo password"
+					,"description": "Necessary to change network setup"
+					,"type": "string"
+					,"format":"password"
+				}
+
+			}
 		}
 	}
 }

@@ -101,7 +101,7 @@ exports.onCall = onProcCall;
  * @return {object} Returns a Promise object or object containing the result
  */
 function onProcCallGet(method, path, args) {
-    // console.log('onProcCallGet('+JSON.stringify(arguments));
+    // log('onProcCallGet('+JSON.stringify(arguments));
     let pathSplit = path.split('/');
     const serviceid = pathSplit.shift();
     const propname = pathSplit.join('/');
@@ -189,9 +189,11 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
     };
     const schemaDefaultJson = readJSON('settings_schema_default.json');
     const schemaWlanJson = readJSON('settings_schema_wlan.json');
-    if (!curSettings) curSettings = {};
-    curSettings.api_filter = {};
+    if (!curSettings) curSettings
+        = {webapi:{api_filter:{}},mqtt:{},network:{}};
+
     let setProp = {};// schema_json.properties;
+    // API Filters are stored in localStorage. Pick them.
     for (let i=0; i<localStorage.length; i++) {
         const clname = localStorage.key(i);
         const filter = localStorage.getItem(clname).filter;
@@ -203,19 +205,19 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
             setProp[clname].default = filter;
         }
 
-        curSettings.api_filter[clname] = filter;
+        curSettings.webapi.api_filter[clname] = filter;
     }
-    schemaJson.properties.api_filter.properties = setProp;
+    schemaJson.properties.webapi.properties.api_filter.properties = setProp;
 
 
     return listNetInterfaces().then(([interfaces, bWlanExist]) => {
         let curInterf;
         let curAp;
-        if (typeof curSettings.interfaces == 'object') {
-            for (let k of Object.keys(curSettings.interfaces)) {
+        if (typeof curSettings.network.interfaces == 'object') {
+            for (let k of Object.keys(curSettings.network.interfaces)) {
                 curInterf = k;
                 if (k.indexOf('wlan')==0) {
-                    curAp = curSettings.interfaces[k].apname;
+                    curAp = curSettings.network.interfaces[k].apname;
                 }
             }
         }
@@ -232,7 +234,7 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
             prop[interf] = (interf.indexOf('wlan')==0 ?
                 schemaWlanJson : schemaDefaultJson);
 
-            schemaJson.properties.interfaces.oneOf.push({
+            schemaJson.properties.network.properties.interfaces.oneOf.push({
                 title: interf,
                 type: 'object',
                 additionalProperties: false,
@@ -240,7 +242,7 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
             });
         });
 
-        if (schemaJson.properties.interfaces.oneOf.length==0) {
+        if (schemaJson.properties.network.properties.interfaces.oneOf.length==0) {
             throw new Error({error: 'No network available.'});
         }
 
@@ -263,11 +265,11 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
             return schemaJson;
         });
     }).catch((err) => {
-        delete schemaJson.properties.interfaces;
-        delete schemaJson.properties.detail;
-        delete schemaJson.properties.root_passwd;
+        delete schemaJson.properties.network.properties.interfaces;
+        delete schemaJson.properties.network.properties.detail;
+        delete schemaJson.properties.network.properties.root_passwd;
         /* eslint-disable max-len */
-        schemaJson.properties.network_settings = {
+        schemaJson.properties.network.properties.network_settings = {
             type: 'object',
             description:
 `nmcli should be installed to setup network configuration. Execute
@@ -301,28 +303,28 @@ exports.onUIGetSettingsSchema = onUIGetSettingsSchema;
  */
 async function onUISetSettings(newSettings) {
     const pi = pluginInterface;
-    if (newSettings.server_port != -1) {
-        pi.server.publish('client_settings', {port: newSettings.server_port});
+    if (newSettings.webapi.server_port != -1) {
+        pi.server.publish('client_settings', {port: newSettings.webapi.server_port});
     }
 
-    for (const clName of Object.keys(newSettings.api_filter)) {
+    for (const clName of Object.keys(newSettings.webapi.api_filter)) {
         const clo = localStorage.getItem(clName);
-        clo.filter = newSettings.api_filter[clName];
+        clo.filter = newSettings.webapi.api_filter[clName];
         localStorage.setItem(clName, clo);
     }
 
-    const rootPwd = newSettings.root_passwd;
-    newSettings.root_passwd = ''; // Root password is not saved to the file
+    const rootPwd = newSettings.network.root_passwd;
+    newSettings.network.root_passwd = ''; // Root password is not saved to the file
 
-    if (!newSettings.interfaces) {
+    if (!newSettings.network.interfaces) {
         return newSettings;
     }
 
     let interf;
-    for (const k of Object.keys(newSettings.interfaces)) {
+    for (const k of Object.keys(newSettings.network.interfaces)) {
         interf = k;
     }
-    const ss = newSettings.interfaces[interf];
+    const ss = newSettings.network.interfaces[interf];
 
     const cname = NMCLI_CONNECTION_NAME_PREFIX + '_' + interf;
     let commands = [];
@@ -352,16 +354,16 @@ async function onUISetSettings(newSettings) {
     );
 
     commands = [];
-    if (newSettings.detail.ip == undefined) { // DHCP
+    if (newSettings.network.detail.ip == undefined) { // DHCP
         commands.push(['nmcli', 'connection', 'modify', cname,
             'ipv4.method', 'auto']);
     } else { // static ip
-        if (newSettings.detail.default_gateway == undefined) {
-            newSettings.detail.default_gateway = '';
+        if (newSettings.network.detail.default_gateway == undefined) {
+            newSettings.network.detail.default_gateway = '';
         }
         const ipSetting =
-            (newSettings.detail.ip + ' '
-             + newSettings.detail.default_gateway).trim();
+            (newSettings.network.detail.ip + ' '
+             + newSettings.network.detail.default_gateway).trim();
         commands.push(['nmcli', 'connection', 'modify', cname,
             'ipv4.method', 'manual', 'ipv4.addresses', ipSetting]);
     }
@@ -370,7 +372,7 @@ async function onUISetSettings(newSettings) {
     ).then(() => {
         commands = [];
     }).catch((e) => {
-        if (newSettings.detail.ip == undefined) { // DHCP
+        if (newSettings.network.detail.ip == undefined) { // DHCP
             throw e;
         }
         // static ip
@@ -379,8 +381,8 @@ async function onUISetSettings(newSettings) {
         commands.push([
             'nmcli', 'connection', 'modify', cname,
             'ipv4.method', 'manual',
-            'ipv4.addresses', newSettings.detail.ip,
-            'ipv4.gateway', newSettings.detail.default_gateway]);
+            'ipv4.addresses', newSettings.network.detail.ip,
+            'ipv4.gateway', newSettings.network.detail.default_gateway]);
     });
     if (commands.length > 0) {
         await executeCommands(commands, null, {sudo: true, password: rootPwd});
@@ -398,15 +400,15 @@ async function onUISetSettings(newSettings) {
     // commands.push(['nmcli','connection','down', cname]);
     commands.push(['nmcli', 'connection', 'up', cname]);
 
-    if (newSettings.server_power != 'none') {
+    if (newSettings.network.server_power != 'none') {
         commands.push([]); // Accept and save settings first
-        if (newSettings.server_power == 'reboot') {
+        if (newSettings.network.server_power == 'reboot') {
             commands.push(['reboot']);
         }
-        if (newSettings.server_power == 'shutdown') {
+        if (newSettings.network.server_power == 'shutdown') {
             commands.push(['shutdown', '-h', 'now']);
         }
-        newSettings.server_power = 'none';
+        newSettings.network.server_power = 'none';
     }
 
     // log('Commands:');
@@ -642,7 +644,7 @@ function executeCommand(cmd, option) {
     return new Promise((ac, rj)=>{
         let okMsg = '';
         let erMsg='';
-        console.log('Exec:'+cmd.join(' '));
+        log('Exec:'+cmd.join(' '));
         let child;
         if (option.sudo) {
             child = sudo(cmd, {password: option.password});
@@ -697,12 +699,19 @@ async function executeCommands(commands, ignoreErrorFunc, option) {
  * @return {boolean} If true, it is installed
  */
 function supportedNetworkManager() {
+    // Supress stderr output even if nmcli does not exist
+    let res = execSync('nmcli connection 2>&1; true');
+    return true;
+
+    /*
     try {
-        execSync('nmcli connection');
+        let res = execSync('nmcli connection');
+        log(res.toString());
         return true;
     } catch (e) {
+        console.error(e);
         return false;
-    }
+    }*/
 }
 exports.supportedNetworkManager = supportedNetworkManager;
 
