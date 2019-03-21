@@ -72,6 +72,19 @@ exports.getMACs = function(bSelfOnly) {
     return ipv4.getMACs(bSelfOnly);
 };
 
+exports.getMyID = function(){
+    log("getMyID called");
+    let myID = localStorage.getItem("MY_UNIQUE_ID",null) ;
+    if( myID != null ) return myID ;
+
+    let macs = ipv4.getMACs(true);
+    for( myID in macs )
+        break;
+    if( myID == null ) return null ; /// No ID or MAC address is obtained as self.
+    localStorage.setItem("MY_UNIQUE_ID",myID) ;
+    return myID ;
+}
+
 
 /**
  * onCall handler of plugin
@@ -131,6 +144,9 @@ function onProcCallGet(method, path, args) {
             };
         }
 
+        re.get_my_id = {
+            _info : {leaf: true, doc:{short: 'Get unique ID of this PicoGW'}}
+        };
         return re;
     }
 
@@ -164,6 +180,8 @@ function onProcCallGet(method, path, args) {
                     }
                 });
             });
+        case 'get_my_id':
+            return {id:exports.getMyID()};
         }
         return {error: 'No such service:'+serviceid};
     }

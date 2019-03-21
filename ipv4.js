@@ -156,7 +156,7 @@ function convToNum(ipstr) {
 
 
 // eslint-disable-next-line require-jsdoc
-let prevMyIPAddress;
+let prevMyIPAddresses = [];
 function chkArpTable() {
     let oldmacs = macs;
 
@@ -187,6 +187,7 @@ function chkArpTable() {
         // log('Checking self MACs/IPs..') ;
         let ifaces = os.networkInterfaces();
         // log('networkInterfaces object:') ; log(ifaces) ;
+        let curIPs = [] ;
         for (const [_mynet, iface] of Object.entries(ifaces)) {
             iface.forEach((iinfo)=>{
                 if (iinfo.family !== 'IPv4' || iinfo.internal === true) return;
@@ -196,10 +197,15 @@ function chkArpTable() {
                     self: true,
                     netmask: iinfo.netmask,
                 };
-		if( prevMyIPAddress != iinfo.address ){
-                    log(`The server is running at \u001b[31m${iinfo.address} / ${iinfo.mac}\u001b[0m`);
-		    prevMyIPAddress = iinfo.address;
-		}
+
+                const ipInfoStr = `${iinfo.address} / ${iinfo.mac} on ${_mynet}`;
+                if( prevMyIPAddresses.indexOf(ipInfoStr) < 0){ // newIP
+                    log(`The server is running at \u001b[31m ${ipInfoStr} \u001b[0m`);
+                } else {
+                    let aidx = prevMyIPAddresses.indexOf(ipInfoStr);
+                    prevMyIPAddresses.splice(aidx,1);
+                }
+                curIPs.push(ipInfoStr);
 
                 let mynet = _mynet;
 
@@ -231,6 +237,10 @@ function chkArpTable() {
                 }
             });
         }
+        prevMyIPAddresses.forEach(ipInfoStr=>{
+            log(`The IP \u001b[31m${ipInfoStr}\u001b[0m was removed from active IPs list.`);
+        });
+        prevMyIPAddresses = curIPs;
 
         // Differenciate and call external callbacks for network change.
         // Compare new arp => old arp
