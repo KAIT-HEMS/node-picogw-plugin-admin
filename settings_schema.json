@@ -16,6 +16,7 @@
 					"title":"API filter in regular expression"
 					,"type":"object"
 					,"properties":{}
+					,"options":{"hidden":true}
 				}
 			
 			}
@@ -39,7 +40,6 @@
 				,"qos":{
 					"title": "QoS: Quality of service"
 					,"type": "number"
-					,"default": 1
 					,"required": true
 					,"default": 1
 				}

@@ -204,8 +204,6 @@ function onProcCallGet(method, path, args) {
  * @return {object} schema json or Promise
  */
 async function onUIGetSettingsSchema(schemaJson, curSettings) {
-    //const pi = pluginInterface;
-    const localStorage = pi.localStorage;
     const readJSON = (basename) => {
         return JSON.parse(pi.pluginfs.readFileSync(basename).toString());
     };
@@ -215,15 +213,17 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
         = {webapi:{api_filter:{}},mqtt:{},network:{}};
 
     let setProp = {};// schema_json.properties;
-    // API Filters are stored in localStorage. Pick them.
-    for (let i=0; i<localStorage.length; i++) {
-        const clname = localStorage.key(i);
-        const filter = localStorage.getItem(clname).filter;
+    // API Filters settings are not implemented yet
+    let filters = localStorage.getItem('API_FILTERS'
+        ,{clientA:{filter:''},clientB:{filter:''},clientC:{filter:''}}); // Sample clients
+    for( let clname in filters ){
         setProp[clname] = {
             title: clname+' client allowed path in regexp',
             type: 'string',
         };
-        if (localStorage.getItem(clname).filter != null) {
+        let filter = filters[clname].filter;
+
+        if (filter != null) {
             setProp[clname].default = filter;
         }
 
@@ -287,6 +287,7 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
             return schemaJson;
         });
     }).catch((err) => {
+        //console.error('err:'+JSON.stringify(err));
         delete schemaJson.properties.network.properties.interfaces;
         delete schemaJson.properties.network.properties.detail;
         delete schemaJson.properties.network.properties.root_passwd;
@@ -329,12 +330,15 @@ async function onUISetSettings(newSettings) {
         pi.server.publish('client_settings', {port: newSettings.webapi.server_port});
     }
 
+    let filters = localStorage.getItem('API_FILTERS',{});
+
     for (const clName of Object.keys(newSettings.webapi.api_filter)) {
-        const clo = localStorage.getItem(clName);
-        clo.filter = newSettings.webapi.api_filter[clName];
-        localStorage.setItem(clName, clo);
+        const clo = filters[clName] || {};
+        clo.filter = newSettings.webapi.api_filter[clName] || '';
+        filters[clName] = clo;
     }
 
+    localStorage.setItem('API_FILTERS',filters);
 
     // MQTT settings
     pi.server.publish('client_settings', {mqtt: newSettings.mqtt});
