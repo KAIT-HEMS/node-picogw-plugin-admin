@@ -73,7 +73,7 @@ exports.getMACs = function(bSelfOnly) {
 };
 
 exports.getMyID = function(){
-    log("getMyID called");
+    //log("getMyID called");
     let myID = localStorage.getItem("MY_UNIQUE_ID",null) ;
     if( myID != null ) return myID ;
 
