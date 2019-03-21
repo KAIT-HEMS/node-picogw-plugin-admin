@@ -1,11 +1,10 @@
-
 let log = console.log;
 const ipv4 = require('./ipv4.js');
 const sudo = require('./sudo.js');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const spawn = require('child_process').spawn;
-let pluginInterface;
+let pi;
 let localStorage;
 
 const NMCLI_CONNECTION_NAME_PREFIX = 'picogw_conn';
@@ -15,8 +14,7 @@ const NMCLI_CONNECTION_NAME_PREFIX = 'picogw_conn';
  * @param {object} _pluginInterface Plugin interface
  */
 function init(_pluginInterface) {
-    pluginInterface = _pluginInterface;
-    const pi = pluginInterface;
+    pi = _pluginInterface;
     localStorage = pi.localStorage;
     log = pi.log;
     ipv4.setNetCallbackFunctions(
@@ -45,6 +43,13 @@ function init(_pluginInterface) {
             // NetCallbacks[plugin_name].onIPAddressChangedCallback(id,oldip,newip);
         }
     );
+
+    // Periodical publish test
+    /*setInterval(()=>{
+        pi.server.publish(
+            'HelloTopic'
+            ,{desc:'Hello desc'});
+    },15000);*/
 };
 exports.init = init;
 
@@ -182,7 +187,7 @@ function onProcCallGet(method, path, args) {
  * @return {object} schema json or Promise
  */
 async function onUIGetSettingsSchema(schemaJson, curSettings) {
-    const pi = pluginInterface;
+    //const pi = pluginInterface;
     const localStorage = pi.localStorage;
     const readJSON = (basename) => {
         return JSON.parse(pi.pluginfs.readFileSync(basename).toString());
@@ -302,7 +307,7 @@ exports.onUIGetSettingsSchema = onUIGetSettingsSchema;
  * @return {object} Settings to save
  */
 async function onUISetSettings(newSettings) {
-    const pi = pluginInterface;
+    // WebAPI settings
     if (newSettings.webapi.server_port != -1) {
         pi.server.publish('client_settings', {port: newSettings.webapi.server_port});
     }
@@ -313,8 +318,16 @@ async function onUISetSettings(newSettings) {
         localStorage.setItem(clName, clo);
     }
 
+
+    // MQTT settings
+    pi.server.publish('client_settings', {mqtt: newSettings.mqtt});
+
+
+
+    // Network settings
     const rootPwd = newSettings.network.root_passwd;
-    newSettings.network.root_passwd = ''; // Root password is not saved to the file
+    delete newSettings.network.root_passwd ; // Root password is not saved to the file
+    //newSettings.network.root_passwd = ''; // Root password is not saved to the file
 
     if (!newSettings.network.interfaces) {
         return newSettings;
