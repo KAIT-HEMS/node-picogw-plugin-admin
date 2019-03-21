@@ -133,6 +133,7 @@ function onProcCallGet(method, path, args) {
         }
         re.net = ipv4.getMACs();
 
+        re.id = {};
         if (bInfo) {
             re.net._info = {
                 leaf: false,
@@ -142,11 +143,9 @@ function onProcCallGet(method, path, args) {
                 leaf: true,
                 doc: {short: 'Check server memory/swap status'},
             };
+            re.id._info = {leaf: true, doc:{short: 'Get unique ID of this PicoGW'}};
         }
 
-        re.get_my_id = {
-            _info : {leaf: true, doc:{short: 'Get unique ID of this PicoGW'}}
-        };
         return re;
     }
 
@@ -180,7 +179,7 @@ function onProcCallGet(method, path, args) {
                     }
                 });
             });
-        case 'get_my_id':
+        case 'id':
             return {id:exports.getMyID()};
         }
         return {error: 'No such service:'+serviceid};
