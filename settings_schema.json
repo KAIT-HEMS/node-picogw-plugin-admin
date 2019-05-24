@@ -38,10 +38,28 @@
 					,"default": "mqtt://test.mosquitto.org"
 				}
 				,"qos":{
-					"title": "QoS: Quality of service"
+					"title": "QoS: Quality of service for publish"
 					,"type": "number"
 					,"required": true
 					,"default": 1
+				}
+				,"topic_crud_sub":{
+					"title": "CRUD subscribe topic: The topic that PicoGW will subscribe for receiving CRUD (REST) request. ${id} is the gateway ID obtained from /v1/admin/id."
+					,"type": "string"
+					,"required": true
+					,"default":"${id}-req"
+				}
+				,"topic_crud_pub":{
+					"title": "CRUD publish topic: The topic that PicoGW will publish for CRUD (REST) response. Subscribe this to receive CRUD response."
+					,"type": "string"
+					,"required": true
+					,"default":"${id}"
+				}
+				,"topic_prefix_plugin":{
+					"title": "Topic PREFIX for spontaneous publish from plugins (resource-dependent postfix follows)"
+					,"type": "string"
+					,"required": true
+					,"default":"${id}"
 				}
 			}
 		}

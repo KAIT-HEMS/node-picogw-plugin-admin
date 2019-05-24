@@ -50,6 +50,7 @@ function init(_pluginInterface) {
             'HelloTopic'
             ,{desc:'Hello desc'});
     },15000);*/
+
 };
 exports.init = init;
 
@@ -196,7 +197,7 @@ function onProcCallGet(method, path, args) {
     return {error: 'No such service:'+serviceid};
 }
 
-
+const DEFAULT_SETTINGS_STR = JSON.stringify({webapi:{api_filter:{}},mqtt:{},network:{}}) ;
 /**
  * Get settings schema
  * @param {object} schemaJson default settings schema
@@ -209,8 +210,7 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
     };
     const schemaDefaultJson = readJSON('settings_schema_default.json');
     const schemaWlanJson = readJSON('settings_schema_wlan.json');
-    if (!curSettings) curSettings
-        = {webapi:{api_filter:{}},mqtt:{},network:{}};
+    if (!curSettings) curSettings = JSON.parse(DEFAULT_SETTINGS_STR) ;
 
     let setProp = {};// schema_json.properties;
     // API Filters settings are not implemented yet
@@ -230,7 +230,6 @@ async function onUIGetSettingsSchema(schemaJson, curSettings) {
         curSettings.webapi.api_filter[clname] = filter;
     }
     schemaJson.properties.webapi.properties.api_filter.properties = setProp;
-
 
     return listNetInterfaces().then(([interfaces, bWlanExist]) => {
         let curInterf;
@@ -325,8 +324,13 @@ exports.onUIGetSettingsSchema = onUIGetSettingsSchema;
  * @return {object} Settings to save
  */
 async function onUISetSettings(newSettings) {
+    let oldSettings = pi.setting.getSettings();
+    if( oldSettings == null )
+    oldSettings = JSON.parse(DEFAULT_SETTINGS_STR);
+
     // WebAPI settings
-    if (newSettings.webapi.server_port != -1) {
+    if ( oldSettings.webapi.server_port != newSettings.webapi.server_port
+        && newSettings.webapi.server_port != -1) {
         pi.server.publish('client_settings', {port: newSettings.webapi.server_port});
     }
 
@@ -347,8 +351,13 @@ async function onUISetSettings(newSettings) {
 
     // Network settings
     const rootPwd = newSettings.network.root_passwd;
-    delete newSettings.network.root_passwd ; // Root password is not saved to the file
-    //newSettings.network.root_passwd = ''; // Root password is not saved to the file
+    newSettings.network.root_passwd = ""; // Root password is not saved to the file
+
+    // If password is not specified, network settings are not updated.
+    if( rootPwd == null || rootPwd.trim().length==0 ){
+        return newSettings ;
+    }
+
 
     if (!newSettings.network.interfaces) {
         return newSettings;
