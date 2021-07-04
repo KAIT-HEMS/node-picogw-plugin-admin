@@ -1,7 +1,7 @@
 const CHECK_ARP_TABLE_AND_PING_INTERVAL = 60*1000;
 const PING_TIMEOUT_IN_SEC = 7;
 
-const arped = require('arped');
+const arped = require('arped-ext');
 const ping = require('ping');
 const os = require('os');
 const log = console.log;

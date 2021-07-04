@@ -1,6 +1,6 @@
 {
   "name": "picogw-plugin-admin",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Admin plugin of picogw",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
     ]
   },
   "dependencies": {
-    "arped": "https://github.com/sowd/node-arped/archive/v0.4.1.tar.gz",
+    "arped-ext": "^0.0.1",
     "inpath": "^1.0.2",
     "pidof": "^1.0.2",
     "ping": "^0.2.2",
