@@ -1,6 +1,6 @@
 {
   "name": "picogw-plugin-admin",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Admin plugin of picogw",
   "main": "index.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "read": "^1.0.7"
   },
   "devDependencies": {
-    "eslint": "^4.13.1",
+    "eslint": "^8.53.0",
     "eslint-config-google": "^0.9.1"
   },
   "bundledDependencies": [
